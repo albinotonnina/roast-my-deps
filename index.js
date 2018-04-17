@@ -22,6 +22,7 @@ const DEFAULT_SOURCE_GLOBS = [
   '!**/*.test.*',
   '!**/{__tests__,test,tests}/**',
 ];
+const REMOVE_COMMENTS_REGEX = /\/\*.+?\*\/|\/\/.*(?=[\n\r])/g
 
 const fsLimit = pLimit(process.env.UV_THREADPOOL_SIZE || 64);
 const processLimit = pLimit(os.cpus().length);
@@ -93,6 +94,8 @@ async function getExternalImports(sourceGlobs, rootDir, ignored) {
 
   await Promise.all(sourceFilePaths.map(async filePath => {
     let fileContents = await readFile(filePath, 'utf-8');
+
+    fileContents = fileContents.replace(REMOVE_COMMENTS_REGEX, '');
 
     REGEXES.forEach(regex => {
       fileContents.replace(regex, (portion, match) => {
